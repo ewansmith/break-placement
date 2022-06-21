@@ -67,6 +67,11 @@ def breakPattern(length):
 
     return score
 
+#Plot distibution to visualise
+x = np.linspace(0, getLength(), getLength())
+plt.plot(x, breakPattern(getLength()))
+plt.show()
+
 
 # Timecode plot
 maxTimes = [12.29, 25.55, 33.05, 49.15, 63.25, 77.05, 91.05, 105.05, 119.0, 123.05, 137.05]
@@ -184,9 +189,5 @@ def plotBreakpoints():
 #Plot timecode breakpoints
 plotBreakpoints()
 
-#Plot distibution to visualise
-x = np.linspace(0, getLength(), getLength())
-plt.plot(x, breakPattern(getLength()))
-plt.show()
 
 
