@@ -72,7 +72,6 @@ x = np.linspace(0, getLength(), getLength())
 plt.plot(x, breakPattern(getLength()))
 plt.show()
 
-
 # Timecode plot
 maxTimes = [12.29, 25.55, 33.05, 49.15, 63.25, 77.05, 91.05, 105.05, 119.0, 123.05, 137.05]
 
@@ -109,7 +108,7 @@ def getMidpoint(start, end):
 def timecodeToInt(timecode):
     '''
     Return timecode in seconds
-    Used in getRuntime function
+    Used in getBreakpoints function
     '''
     temp = timecode.split(':')
     answer = [int(x) for x in temp]
@@ -119,19 +118,16 @@ def timecodeToInt(timecode):
     secs  =(answer[2] * 25)
     return hours + mins + secs
 
-def getRuntime(prodNo):
+def getRuntime(prodNo, json):
     '''
     Return runtime in minutes of a production number
     Uses ['durations']['runtime'] - different to getLength
     '''
-    api = f"https://programmeversionapi.prd.bs.itv.com/programmeVersion/{prodNo}"
-    json = requests.get(api).json()
     showLength =  json['_embedded']['programmeVersions'][0]['durations']['runTime']
-
     return showLength
 
-#'breakpoints' = 2 dimensional array
-# First index corresponds to number of breakpoints, second index contains the time of each breakpoint in seconds
+# breakpoints = 2 dimensional array
+# First index corresponds to number of breakpoints, second index contains the time of breakpoint in seconds
 breakpoints = []
 for i in range(0,10):
     breakpoints.append([])
@@ -144,7 +140,7 @@ def getBreakpoints(prodNo):
     json = requests.get(api).json()
 
     breakpointParts = json['_embedded']['programmeVersions'][0]['partTimes']
-    showLength = getRuntime(prodNo)
+    showLength = getRuntime(prodNo, json)
     noBreakpoints = getPrefNoBreakpoints(showLength)
 
     for part in breakpointParts:
