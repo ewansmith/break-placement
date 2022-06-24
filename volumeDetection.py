@@ -5,7 +5,7 @@ import tempfile
 import re
 import requests
 import numpy as np
-from utilities import convertProdID
+from utilities import convertProdID, timecodeToFrame
 
 """
 Use ffmpeg to measure audio loudness per frame
@@ -15,40 +15,28 @@ Output this as time series data for analysis
 audioData=[]
 
 
-def getStartAndEnd(prodID):
+def getStartAndEnd(obj):
     """
     Get start and end of content from API using production number
     In seconds
     """
-    # Transform id to correct format
-    prodNo = convertProdID(prodID)
-    # Get programme info
-    api = f"https://programmeversionapi.prd.bs.itv.com/programmeVersion/{prodNo}"
-    json = requests.get(api).json()
-    keyInfo = json['_embedded']['programmeVersions'][0]['partTimes'][0]
-    start = keyInfo['som'].split(':')
-    end = keyInfo['eom'].split(':')
-    essence = keyInfo['soe'].split(':')
-    # Calculate start and end frame number
-    som_split = [int(x) for x in start]
-    eom_split = [int(x) for x in end]
-    essence_split = [int(x) for x in essence]
-    som = np.subtract(som_split, essence_split) 
-    eom = np.subtract(eom_split, essence_split) 
-    startSecond = (som[0] * 3600) + (som [1] * 60) + som[2] + (som[3] / 25)
-    endSecond = (eom[0] * 3600) + (eom [1] * 60) + eom[2] + (eom[3] / 25)
+    start = timecodeToFrame(obj['som'])
+    end = timecodeToFrame(obj['eom'])
+    essence = timecodeToFrame(obj['soe'])
+    startSecond = (start - essence) / 25
+    endSecond = (end - essence) / 25
     
     return { 'start': startSecond, 'end': endSecond }
 
 
-def analyseAudio(url, key):
+def analyseAudio(url, info):
     """
     Extract loudness data per frame from content
     """
     # url= 'LOWRES_10-2465-0175-001.mp4'
 
     # trim content using som / eom from API
-    details = getStartAndEnd(key)
+    details = getStartAndEnd(info)
     start = details['start']
     end = details['end']
 
@@ -81,6 +69,3 @@ def analyseAudio(url, key):
     print('Audio analysis finished')
 
     return audioData
-
-
-# print(analyseAudio('LOWRES_10-2465-0175-001.mp4'))

@@ -1,11 +1,21 @@
 def convertProdID(id):
     """
-    Assumes x/x/x#x format
-    (not for use with x-x-x?x)
+    Assumes x_x_x.x format
     """
     # check = id.split('_')[1] if '_' in id else id
-    split = id.split('/')
-    partJoined = '_'.join(split)
-    new = partJoined.replace('#', '.')
+    split = id.split('_')
+    partJoined = '/'.join(split)
+    new = partJoined.replace('.', '#')
 
     return new
+
+
+def timecodeToFrame(time):
+    """
+    Converts timecode to frame count
+    """
+    split = time.split(":")
+    ints = [int(x) for x in split]
+    frameCount = (ints[0] * 3600 * 25) + (ints [1] * 60 * 25) + (ints[2] * 25) + ints[3]
+
+    return frameCount
