@@ -147,7 +147,7 @@ class VideoDetect:
                 "RoleArn": self.roleArn,
                 "SNSTopicArn": self.snsTopicArn,
             },
-            SegmentTypes=["TECHNICAL_CUE"],#, "SHOT"],
+            SegmentTypes=["TECHNICAL_CUE", "SHOT"],
             Filters={
                 "TechnicalCueFilter": {
                     "BlackFrame": {
@@ -155,8 +155,8 @@ class VideoDetect:
                         "MinCoveragePercentage": min_coverage_percentage,
                     },
                     "MinSegmentConfidence": min_Technical_Cue_Confidence,
-                }#,
-                # "ShotFilter": {"MinSegmentConfidence": min_Shot_Confidence},
+                },
+                "ShotFilter": {"MinSegmentConfidence": min_Shot_Confidence},
             }
         )
 
@@ -234,7 +234,7 @@ class VideoDetect:
 
 def main():
     roleArn = 'arn:aws:iam::315961771263:role/RekRole'
-    bucket = 'soft-parted-content-examples'
+    bucket = 'soft-parted-examples'
     video = 'LOWRES_2-4259-0359-001.mp4'
 
     analyzer=VideoDetect(roleArn, bucket, video)

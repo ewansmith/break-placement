@@ -12,8 +12,6 @@ Use ffmpeg to measure audio loudness per frame
 Output this as time series data for analysis
 """
 
-s3 = boto3.client('s3')
-bucket = 'soft-parted-examples'
 audioData=[]
 
 
@@ -22,17 +20,16 @@ def getStartAndEnd(prodID):
     Get start and end of content from API using production number
     In seconds
     """
-    print('Fetching content time data')
-
-    prodNo = convertProdID(prodID.split('.')[0])
+    # Transform id to correct format
+    prodNo = convertProdID(prodID)
+    # Get programme info
     api = f"https://programmeversionapi.prd.bs.itv.com/programmeVersion/{prodNo}"
     json = requests.get(api).json()
     keyInfo = json['_embedded']['programmeVersions'][0]['partTimes'][0]
     start = keyInfo['som'].split(':')
     end = keyInfo['eom'].split(':')
     essence = keyInfo['soe'].split(':')
-    # start='10:00:00:00'.split(':')
-    # end='11:25:40:21'.split(':')
+    # Calculate start and end frame number
     som_split = [int(x) for x in start]
     eom_split = [int(x) for x in end]
     essence_split = [int(x) for x in essence]
@@ -44,31 +41,31 @@ def getStartAndEnd(prodID):
     return { 'start': startSecond, 'end': endSecond }
 
 
-def extractAudio(key):
+def analyseAudio(url, key):
     """
-    separate audio channels from video
+    Extract loudness data per frame from content
     """
-    url = s3.generate_presigned_url('get_object',
-        Params = { 'Bucket': bucket, 'Key': key },
-        ExpiresIn = 3600,
-    )
-    # url= 'LOWRES_2-4259-0359-001.mp4'
-    # trim content using som / eom from API
-    content = ffmpeg.input(url)
-    start = getStartAndEnd(key)['start']
-    end = getStartAndEnd(key)['end']
+    # url= 'LOWRES_10-2465-0175-001.mp4'
 
+    # trim content using som / eom from API
+    details = getStartAndEnd(key)
+    start = details['start']
+    end = details['end']
+
+    # Begin ffmpeg process using URL and store in temp file 
     print('Beginning audio analysis')
+    content = ffmpeg.input(url)
 
     with tempfile.NamedTemporaryFile(delete=False) as tmp:
         audio = (content
-            .filter('atrim', start=int(start), end=int(end))
-            .filter('astats', length=0.04, metadata=1, reset=1)
-            .filter('ametadata', mode='print', key='lavfi.astats.Overall.RMS_level', file=tmp.name)
+            .filter('asetnsamples', n=1920) # set correct sampling rate to avoid discrepancies
+            .filter('atrim', start=int(start), end=int(end)) # trim audio
+            .filter('astats', length=0.04, metadata=1, reset=1) # generate stats
+            .filter('ametadata', mode='print', key='lavfi.astats.Overall.RMS_level', file=tmp.name) # record loudness in tmp
         )
         output = ffmpeg.output(audio, 'out.aac')
-        out = ffmpeg.overwrite_output(output)
-        out.run(quiet=True)
+        out = ffmpeg.overwrite_output(output) # gives permission to overwrite previous audio
+        out.run(quiet=True) # quiet logs
 
 
     with open(tmp.name, 'r') as f:
@@ -81,9 +78,9 @@ def extractAudio(key):
 
     tmp.close()
 
-    print('end ffmpeg')
+    print('Audio analysis finished')
 
     return audioData
 
 
-print(extractAudio('1-7133-0001-004.mov'))
+# print(analyseAudio('LOWRES_10-2465-0175-001.mp4'))
