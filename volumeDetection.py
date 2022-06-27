@@ -1,4 +1,3 @@
-from tracemalloc import start
 import ffmpeg
 import boto3
 import tempfile
@@ -11,8 +10,6 @@ from utilities import convertProdID, timecodeToFrame
 Use ffmpeg to measure audio loudness per frame
 Output this as time series data for analysis
 """
-
-audioData=[]
 
 
 def getStartAndEnd(obj):
@@ -34,7 +31,7 @@ def analyseAudio(url, info):
     Extract loudness data per frame from content
     """
     # url= 'LOWRES_10-2465-0175-001.mp4'
-
+    audioData=[]
     # trim content using som / eom from API
     details = getStartAndEnd(info)
     start = details['start']

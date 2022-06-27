@@ -136,7 +136,7 @@ class VideoDetect:
         
     def StartSegmentDetection(self):
 
-        min_Technical_Cue_Confidence = 90
+        min_Technical_Cue_Confidence = 80
         min_Shot_Confidence = 80
         max_pixel_threshold = 0.1
         min_coverage_percentage = 95
@@ -147,16 +147,16 @@ class VideoDetect:
                 "RoleArn": self.roleArn,
                 "SNSTopicArn": self.snsTopicArn,
             },
-            SegmentTypes=["TECHNICAL_CUE", "SHOT"],
+            SegmentTypes=["TECHNICAL_CUE"],#, "SHOT"],
             Filters={
                 "TechnicalCueFilter": {
                     "BlackFrame": {
-                        "MaxPixelThreshold": max_pixel_threshold,
+                        # "MaxPixelThreshold": max_pixel_threshold,
                         "MinCoveragePercentage": min_coverage_percentage,
                     },
                     "MinSegmentConfidence": min_Technical_Cue_Confidence,
                 },
-                "ShotFilter": {"MinSegmentConfidence": min_Shot_Confidence},
+                # "ShotFilter": {"MinSegmentConfidence": min_Shot_Confidence},
             }
         )
 
@@ -164,10 +164,12 @@ class VideoDetect:
         print(f"Start Job Id: {self.startJobId}")
 
     def GetSegmentDetectionResults(self):
-        maxResults = 15
+        maxResults = 1000
         paginationToken = ""
         finished = False
         firstTime = True
+
+        segmentEnds = []
 
         while finished == False:
             response = self.rek.get_segment_detection(
@@ -179,24 +181,24 @@ class VideoDetect:
                 print("\nRequested Types\n---------------")
                 for selectedSegmentType in response['SelectedSegmentTypes']:
                     print(f"\tType: {selectedSegmentType['Type']}")
-                    print(f"\t\tModel Version: {selectedSegmentType['ModelVersion']}")
+                    # print(f"\t\tModel Version: {selectedSegmentType['ModelVersion']}")
 
                 print()
-                print("\nAudio metadata\n--------------")
-                for audioMetadata in response['AudioMetadata']:
-                    print(f"\tCodec: {audioMetadata['Codec']}")
-                    print(f"\tDuration: {audioMetadata['DurationMillis']}")
-                    print(f"\tNumber of Channels: {audioMetadata['NumberOfChannels']}")
-                    print(f"\tSample rate: {audioMetadata['SampleRate']}")
-                print()
-                print("\nVideo metadata\n--------------")
-                for videoMetadata in response["VideoMetadata"]:
-                    print(f"\tCodec: {videoMetadata['Codec']}")
-                    print(f"\tColor Range: {videoMetadata['ColorRange']}")
-                    print(f"\tDuration: {videoMetadata['DurationMillis']}")
-                    print(f"\tFormat: {videoMetadata['Format']}")
-                    print(f"\tFrame rate: {videoMetadata['FrameRate']}")
-                    print("\nSegments\n--------")
+                # print("\nAudio metadata\n--------------")
+                # for audioMetadata in response['AudioMetadata']:
+                #     print(f"\tCodec: {audioMetadata['Codec']}")
+                #     print(f"\tDuration: {audioMetadata['DurationMillis']}")
+                #     print(f"\tNumber of Channels: {audioMetadata['NumberOfChannels']}")
+                #     print(f"\tSample rate: {audioMetadata['SampleRate']}")
+                # print()
+                # print("\nVideo metadata\n--------------")
+                # for videoMetadata in response["VideoMetadata"]:
+                #     print(f"\tCodec: {videoMetadata['Codec']}")
+                #     print(f"\tColor Range: {videoMetadata['ColorRange']}")
+                #     print(f"\tDuration: {videoMetadata['DurationMillis']}")
+                #     print(f"\tFormat: {videoMetadata['Format']}")
+                #     print(f"\tFrame rate: {videoMetadata['FrameRate']}")
+                #     print("\nSegments\n--------")
 
                 firstTime = False
 
@@ -212,17 +214,18 @@ class VideoDetect:
                     print(f"\tConfidence: {segment['ShotSegment']['Confidence']}")
                     print(f"\tIndex: " + str(segment["ShotSegment"]["Index"]))
 
-                print(f"\tDuration (milliseconds): {segment['DurationMillis']}")
-                print(f"\tStart Timestamp (milliseconds): {segment['StartTimestampMillis']}")
-                print(f"\tEnd Timestamp (milliseconds): {segment['EndTimestampMillis']}")
+                # print(f"\tDuration (milliseconds): {segment['DurationMillis']}")
+                # print(f"\tStart Timestamp (milliseconds): {segment['StartTimestampMillis']}")
+                # print(f"\tEnd Timestamp (milliseconds): {segment['EndTimestampMillis']}")
                 
                 print(f"\tStart timecode: {segment['StartTimecodeSMPTE']}")
                 print(f"\tEnd timecode: {segment['EndTimecodeSMPTE']}")
-                print(f"\tDuration timecode: {segment['DurationSMPTE']}")
+                # print(f"\tDuration timecode: {segment['DurationSMPTE']}")
 
-                print(f"\tStart frame number {segment['StartFrameNumber']}")
-                print(f"\tEnd frame number: {segment['EndFrameNumber']}")
-                print(f"\tDuration frames: {segment['DurationFrames']}")
+                # print(f"\tStart frame number {segment['StartFrameNumber']}")
+                # print(f"\tEnd frame number: {segment['EndFrameNumber']}")
+                segmentEnds.append(segment['EndFrameNumber'])
+                # print(f"\tDuration frames: {segment['DurationFrames']}")
 
                 print()
 
@@ -231,21 +234,23 @@ class VideoDetect:
             else:
                 finished = True
 
+        return segmentEnds
 
-def main():
+
+def getRekResults(bucket='soft-parted-examples', video='LOWRES_2-4259-0359-001.mp4'):
     roleArn = 'arn:aws:iam::315961771263:role/RekRole'
-    bucket = 'soft-parted-examples'
-    video = 'LOWRES_2-4259-0359-001.mp4'
 
     analyzer=VideoDetect(roleArn, bucket, video)
     analyzer.CreateTopicandQueue()
 
     analyzer.StartSegmentDetection()
     if analyzer.GetSQSMessageSuccess()==True:
-        analyzer.GetSegmentDetectionResults()
+        results = analyzer.GetSegmentDetectionResults()
     
     analyzer.DeleteTopicandQueue()
 
+    return results
+
 
 if __name__ == "__main__":
-    main()
+    getRekResults('soft-parted-examples', 'LOWRES_2-4259-0359-001.mp4')

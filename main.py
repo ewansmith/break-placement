@@ -1,8 +1,10 @@
 import urllib.parse
 from volumeDetection import analyseAudio
 from evenDistributionScore import breakPattern
+from RekognitionTest import getRekResults
 from utilities import convertProdID, timecodeToFrame
 import pandas as pd
+import numpy as np
 import requests
 import boto3
 from io import StringIO
@@ -82,7 +84,7 @@ def formatBreaks(obj):
             for i in range(adjusted[idx-1], point+1):
                 breaks[i] = 1
 
-    return breaks.count(1)
+    return breaks
 
 
 def main():
@@ -94,16 +96,25 @@ def main():
         location = getLocation(key)
         if location:
             url = getUrl(location)
-            audio = analyseAudio(url, obj)
             breaks = formatBreaks(obj)
+            audio = analyseAudio(url, obj)
             distibutionScores = breakPattern(length)
+            # shots = getRekResults('bucket', key)
         else: 
             print('ERROR: no location found for id: ', key)
             continue
 
-        # Collect data in a dataframe
-        data = { 'breaks': breaks, 'audio': audio, 'distribution': distibutionScores }
-        df = pd.DataFrame(data, columns=['breaks', 'audio', 'distribution'])
+
+        # Ensure audio is same length - sometimes crops a few frames off
+        audio.extend(np.zeros(length - len(audio)))
+
+        try:
+            # Collect data in a dataframe
+            data = { 'breaks': breaks, 'audio': audio, 'distribution': distibutionScores }
+            df = pd.DataFrame(data, columns=['breaks', 'audio', 'distribution'])
+        except:
+            print('ERROR: length mismatch in data for id ', key)
+            continue
         
         try:
             # Convert dataFrame to csv and upload
@@ -111,7 +122,7 @@ def main():
             s3_upload = upload_session.resource('s3')
             bucket = s3_upload.Bucket('break-data-collection')
             csv_buffer = StringIO()
-            df.to_csv(csv_buffer)
+            df.to_csv(csv_buffer, index=False)
             filename = key.replace('/', '_')
             s3_upload.Object('break-data-collection', f'{filename}.csv').put(Body=csv_buffer.getvalue())
             print(key, 'metadata uploaded to bucket')
