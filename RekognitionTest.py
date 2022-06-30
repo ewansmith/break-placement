@@ -3,12 +3,17 @@ import json
 import sys
 import time
 
+session = boto3.Session(profile_name='content', region_name='eu-west-1')
+
 
 class VideoDetect:
     jobId = ''
-    rek = boto3.client('rekognition')
-    sqs = boto3.client('sqs')
-    sns = boto3.client('sns')
+    # rek = boto3.client('rekognition')
+    # sqs = boto3.client('sqs')
+    # sns = boto3.client('sns')
+    rek = session.client('rekognition')
+    sqs = session.client('sqs')
+    sns = session.client('sns')
     
     roleArn = ''
     bucket = ''
@@ -148,16 +153,16 @@ class VideoDetect:
                 "SNSTopicArn": self.snsTopicArn,
             },
             SegmentTypes=["TECHNICAL_CUE"],#, "SHOT"],
-            Filters={
-                "TechnicalCueFilter": {
-                    "BlackFrame": {
-                        # "MaxPixelThreshold": max_pixel_threshold,
-                        "MinCoveragePercentage": min_coverage_percentage,
-                    },
-                    "MinSegmentConfidence": min_Technical_Cue_Confidence,
-                },
+            # Filters={
+            #     "TechnicalCueFilter": {
+            #         "BlackFrame": {
+            #             # "MaxPixelThreshold": max_pixel_threshold,
+            #             "MinCoveragePercentage": min_coverage_percentage,
+            #         },
+            #         "MinSegmentConfidence": min_Technical_Cue_Confidence,
+            #     },
                 # "ShotFilter": {"MinSegmentConfidence": min_Shot_Confidence},
-            }
+            # }
         )
 
         self.startJobId = response["JobId"]
@@ -253,4 +258,4 @@ def getRekResults(bucket='soft-parted-examples', video='LOWRES_2-4259-0359-001.m
 
 
 if __name__ == "__main__":
-    getRekResults('soft-parted-examples', 'LOWRES_2-4259-0359-001.mp4')
+    getRekResults('soft-parted-examples', 'no_sound.mp4')
