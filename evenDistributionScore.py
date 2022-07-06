@@ -40,7 +40,7 @@ def breakPattern(length):
             endpoint = 0
             num = int(length - fiveMins - len(score))
         else:
-            endpoint = 40 if score[-1] == 100 else 100
+            endpoint = 25 if score[-1] == 100 else 100
             num = int(point - len(score))
 
         section = np.linspace(int(score[-1]), endpoint, num)
