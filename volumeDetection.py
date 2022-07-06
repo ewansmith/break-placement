@@ -32,7 +32,7 @@ def analyseAudio(url, info):
     """
     # url= 'LOWRES_10-2465-0175-001.mp4'
     audioData=[]
-    # trim content using som / eom from API
+    # trim content using som / eom
     details = getStartAndEnd(info)
     start = details['start']
     end = details['end']

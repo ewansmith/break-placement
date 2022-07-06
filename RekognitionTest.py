@@ -3,7 +3,7 @@ import json
 import sys
 import time
 
-session = boto3.Session(profile_name='content', region_name='eu-west-1')
+session = boto3.Session(profile_name='default', region_name='eu-west-1')
 
 
 class VideoDetect:
@@ -242,7 +242,7 @@ class VideoDetect:
         return segmentEnds
 
 
-def getRekResults(bucket='soft-parted-examples', video='LOWRES_2-4259-0359-001.mp4'):
+def getRekResults(bucket='itv-cdt-prd-lowres', video='LOWRES_2-4259-0359-001.mp4'):
     roleArn = 'arn:aws:iam::315961771263:role/RekRole'
 
     analyzer=VideoDetect(roleArn, bucket, video)
@@ -258,4 +258,4 @@ def getRekResults(bucket='soft-parted-examples', video='LOWRES_2-4259-0359-001.m
 
 
 if __name__ == "__main__":
-    getRekResults('soft-parted-examples', 'no_sound.mp4')
+    getRekResults()

@@ -19,3 +19,13 @@ def timecodeToFrame(time):
     frameCount = (ints[0] * 3600 * 25) + (ints [1] * 60 * 25) + (ints[2] * 25) + ints[3]
 
     return frameCount
+
+
+def calculateLength(obj):
+    """
+    Calculate the length of content in frames from som and eom
+    """
+    start = timecodeToFrame(obj['som'])
+    end = timecodeToFrame(obj['eom'])
+
+    return end - start
