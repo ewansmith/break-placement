@@ -24,25 +24,6 @@ breakLookup = [
 ]
 breakLookup.sort() # ensure sorted for bisect
 
-
-def getLength(prodNo = "1_7133_0001.004"):
-    """
-    Get length of content from API using production number
-    """
-    api = f"https://programmeversionapi.prd.bs.itv.com/programmeVersion/{prodNo}"
-    json = requests.get(api).json()
-    keyInfo = json['_embedded']['programmeVersions'][0]['partTimes'][0]
-    start = keyInfo['som'].split(':')
-    end = keyInfo['eom'].split(':')
-    start='10:00:00:00'.split(':')
-    end='11:25:40:21'.split(':')
-    som = [int(x) for x in start]
-    eom = [int(x) for x in end]
-    difference = np.subtract(eom, som)
-
-    return (difference[0] * 3600 * 25) + (difference [1] * 60 * 25) + (difference[2] * 25) + difference[3]
-
-
 def breakPattern(length):
     """
     Return time series with placement score for each frame
@@ -58,7 +39,7 @@ def breakPattern(length):
             endpoint = 0
             num = int(length - fiveMins - len(score))
         else:
-            endpoint = 40 if score[-1] == 100 else 100
+            endpoint = 25 if score[-1] == 100 else 100
             num = int(point - len(score))
 
         section = np.linspace(int(score[-1]), endpoint, num)
