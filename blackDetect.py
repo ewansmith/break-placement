@@ -57,8 +57,7 @@ def blackDetect(url, info):
         for line in f.readlines()[1::2]:
             try:
                 num = re.search('=(.+?)\n', line).group(1)
-                blackFrames.append(int(float(num) * 25))
-
+                blackFrames.append(int(float(num) * 25) - (start * 25)) # correcty for trim
             except:
                 print('Failed to read')
 
@@ -74,11 +73,12 @@ def blackDetect(url, info):
 
     return blackData
 
-# print(blackDetect('', {}))
-
 # object = {
-#             "ID": "10_2465_0175.001",
+#             'ID': '2_4259_0359.001',
 #             "soe": "09:59:30:00",
+#             "eoe": "10:20:50:01",
 #             "som": "10:00:00:00",
-#             "eom": "10:40:15:23"
+#             "eom": "10:20:40:00",
 #             }
+
+# print(len(blackDetect('', object)))

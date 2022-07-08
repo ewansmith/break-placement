@@ -78,73 +78,78 @@ def formatBreaks(obj):
 
     return breaks
 
-object = {
-    'ID': '2_4259_0359.001',
-    "soe": "09:59:30:00",
-    "eoe": "10:20:50:01",
-    "som": "10:00:00:00",
-    "eom": "10:20:40:00",
-     "optionalBreakpoints": [
-                [
-                    "10:19:45:08",
-                    "10:19:45:12"
-                ],
-            ],
-            "preferredBreakpoints": [
-                [
-                    "10:14:30:02",
-                    "10:14:30:03"
-                ],
-            ],
-}
+# object = {
+#     'ID': '2_4259_0359.001',
+#     "soe": "09:59:30:00",
+#     "eoe": "10:20:50:01",
+#     "som": "10:00:00:00",
+#     "eom": "10:20:40:00",
+#      "optionalBreakpoints": [
+#                 [
+#                     "10:19:45:08",
+#                     "10:19:45:12"
+#                 ],
+#             ],
+#             "preferredBreakpoints": [
+#                 [
+#                     "10:14:30:02",
+#                     "10:14:30:03"
+#                 ],
+#             ],
+# }
 
 
 def main():
 
-    for obj in input_data:
-        # obj = object
-        key = obj['ID']
-        if key[-3:] == '002':
-            continue
-        length = calculateLength(obj)
-        print('Analysing id: ', key) 
-        location = getLocation(key)
-        if location:
-            url = getUrl(location)
-            breaks = formatBreaks(obj)
-            audio = analyseAudio(url, obj)
-            blackFrames = blackDetect(url, obj)
-            distibutionScores = breakPattern(length)
-            # shots = getRekResults('itv-cdt-prd-lowres', key)
-        else: 
-            print('ERROR: no location found for id: ', key)
-            continue
+    try:
+        for obj in input_data:
+            # obj = object
+            key = obj['ID']
+            if key[-3:] == '002':
+                continue
+            length = calculateLength(obj)
+            print('Analysing id: ', key) 
+            location = getLocation(key)
+            if location:
+                url = getUrl(location)
+                breaks = formatBreaks(obj)
+                audio = analyseAudio(url, obj)
+                blackFrames = blackDetect(url, obj)
+                distibutionScores = breakPattern(length)
+                # shots = getRekResults('itv-cdt-prd-lowres', key)
+            else: 
+                print('ERROR: no location found for id: ', key)
+                continue
 
 
-        # Ensure audio is same length - sometimes crops a few frames off
-        audio.extend(np.zeros(length - len(audio)))
-        blackFrames.extend(np.zeros(length - len(blackFrames)))
+            # Ensure audio is same length - sometimes crops a few frames off
+            audio.extend(np.zeros(length - len(audio)))
+            blackFrames.extend(np.zeros(length - len(blackFrames)))
 
-        try:
-            # Collect data in a dataframe
-            data = { 'breaks': breaks, 'audio': audio, 'blackFrames': blackFrames, 'distribution': distibutionScores }
-            df = pd.DataFrame(data, columns=['breaks', 'audio', 'blackFrames', 'distribution'])
-        except:
-            print('ERROR: length mismatch in data for id ', key)
-            continue
-        
-        try:
-            # Convert dataFrame to csv and upload
-            upload_session = boto3.Session(profile_name='default')
-            s3_upload = upload_session.resource('s3')
-            bucket = s3_upload.Bucket('break-data-collection')
-            csv_buffer = StringIO()
-            df.to_csv(csv_buffer, index=False)
-            filename = key.replace('/', '_')
-            s3_upload.Object('break-data-collection', f'{filename}.csv').put(Body=csv_buffer.getvalue())
-            print(key, 'metadata uploaded to bucket')
-        except:
-            print('Failed to upload to s3 bucket')
+            try:
+                # Collect data in a dataframe
+                data = { 'breaks': breaks, 'audio': audio, 'blackFrames': blackFrames, 'distribution': distibutionScores }
+                df = pd.DataFrame(data, columns=['breaks', 'audio', 'blackFrames', 'distribution'])
+            except:
+                print('ERROR: length mismatch in data for id ', key)
+                continue
+            
+            try:
+                # Convert dataFrame to csv and upload
+                upload_session = boto3.Session(profile_name='default')
+                s3_upload = upload_session.resource('s3')
+                bucket = s3_upload.Bucket('break-data-collection')
+                csv_buffer = StringIO()
+                df.to_csv(csv_buffer, index=False)
+                filename = key.replace('/', '_')
+                s3_upload.Object('break-data-collection', f'{filename}.csv').put(Body=csv_buffer.getvalue())
+                print(key, 'metadata uploaded to bucket')
+                break
+            except:
+                print('Failed to upload to s3 bucket')
+
+    except KeyboardInterrupt:
+        print('Interupted.')
 
 
 if __name__ == '__main__':
