@@ -1,7 +1,7 @@
-import urllib.parse
+import urllib.parse, urllib.request
+import shutil
 from volumeDetection import analyseAudio
 from evenDistributionScore import breakPattern
-from RekognitionTest import getRekResults
 from blackDetect import blackDetect
 from utilities import convertProdID, timecodeToFrame, calculateLength
 import pandas as pd
@@ -10,6 +10,7 @@ import requests
 import boto3
 from io import StringIO
 import json
+import os
 
 
 f = open('more_input.json')
@@ -66,7 +67,7 @@ def formatBreaks(obj):
     breakpoints.extend(optionalBreakpoints)
     converted = [timecodeToFrame(item) for arr in breakpoints for item in arr]
     ordered = sorted(converted)
-    start = timecodeToFrame(obj['soe'])
+    start = timecodeToFrame(obj['som']) # was soe - which one?
     adjusted = [item - start for item in ordered]
     length = calculateLength(obj)
     breaks = [0] * length
@@ -112,11 +113,13 @@ def main():
             location = getLocation(key)
             if location:
                 url = getUrl(location)
+                with urllib.request.urlopen(url) as response, open('current.mp4', 'wb') as out_file:
+                    shutil.copyfileobj(response, out_file)
+
                 breaks = formatBreaks(obj)
-                audio = analyseAudio(url, obj)
-                blackFrames = blackDetect(url, obj)
+                audio = analyseAudio(obj)
+                blackFrames = blackDetect(obj)
                 distibutionScores = breakPattern(length)
-                # shots = getRekResults('itv-cdt-prd-lowres', key)
             else: 
                 print('ERROR: no location found for id: ', key)
                 continue
@@ -138,13 +141,13 @@ def main():
                 # Convert dataFrame to csv and upload
                 upload_session = boto3.Session(profile_name='default')
                 s3_upload = upload_session.resource('s3')
-                bucket = s3_upload.Bucket('break-data-collection')
+                # bucket = s3_upload.Bucket('break-data-collection')
                 csv_buffer = StringIO()
                 df.to_csv(csv_buffer, index=False)
                 filename = key.replace('/', '_')
                 s3_upload.Object('break-data-collection', f'{filename}.csv').put(Body=csv_buffer.getvalue())
                 print(key, 'metadata uploaded to bucket')
-                break
+                # break
             except:
                 print('Failed to upload to s3 bucket')
 
