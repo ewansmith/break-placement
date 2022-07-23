@@ -168,7 +168,7 @@ def main():
                 # Convert dataFrame to csv and upload
                 csv_buffer = StringIO()
                 df.to_csv(csv_buffer, index=False)
-                s3_upload = session.client('s3')
+                s3_upload = session.resource('s3')
                 s3_upload.Object('break-data-collection', full_name).put(Body=csv_buffer.getvalue())
                 print(key, 'metadata uploaded to bucket')
             except:
