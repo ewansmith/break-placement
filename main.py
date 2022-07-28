@@ -98,33 +98,10 @@ def checkCompletion(ID):
         return False
 
 
-
-# test_object = {
-#     'ID': '2_4259_0359.001',
-#     "soe": "09:59:30:00",
-#     "eoe": "10:20:50:01",
-#     "som": "10:00:00:00",
-#     "eom": "10:20:40:00",
-#      "optionalBreakpoints": [
-#                 [
-#                     "10:19:45:08",
-#                     "10:19:45:12"
-#                 ],
-#             ],
-#             "preferredBreakpoints": [
-#                 [
-#                     "10:14:30:02",
-#                     "10:14:30:03"
-#                 ],
-#             ],
-# }
-
-
 def main():
 
     try:
         for obj in input_data:
-            # obj = test_object
             key = obj['ID']
             if key[-3:] == '002':
                 continue
@@ -180,3 +157,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    # getUrl(getLocation('10_0137_0015.003'))

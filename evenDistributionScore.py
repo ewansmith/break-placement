@@ -52,6 +52,8 @@ def breakPattern(length):
 
         
 # Plot distibution to visualise
-# x=np.linspace(0, getLength(), getLength())
-# plt.plot(x, breakPattern(getLength()))
+# x=np.linspace(0, 60000, 60000)
+# plt.plot(x, breakPattern(60000))
+# plt.xlabel('Framecount')
+# plt.ylabel('Score')
 # plt.show()
