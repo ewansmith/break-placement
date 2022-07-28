@@ -61,13 +61,6 @@ def main():
                 frame = index + 2
                 answer_array.append([frame, prob, toTimecode(frame)])
 
-            # groups = [[nums[0]]]          # first group already has first number
-            # for (x, y), d in zip(pairs, diffs):
-            #     if d < 10:
-            #         groups[-1].append(y)  # add to last group
-            #     else:
-            #         groups.append([y])    # start new group
-
 
         predictions_df = pd.DataFrame(answer_array, columns=['Frame', 'Confidence', 'Timecode'])
         predictions_df.to_csv(f'PRED-{file}.csv', index=False)
