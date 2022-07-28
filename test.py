@@ -1,6 +1,6 @@
 import boto3
 import pandas as pd
-from utilities import calculateLength
+from utilities import calculateLength, toTimecode
 import requests
 
 
@@ -58,7 +58,8 @@ def main():
             answer = prediction[0]
             prob = prediction[1][:-2]
             if answer == '1' and float(prob) > 0.95:
-                answer_array.append([index + 2, prob])
+                frame = index + 2
+                answer_array.append([frame, prob, toTimecode(frame)])
 
             # groups = [[nums[0]]]          # first group already has first number
             # for (x, y), d in zip(pairs, diffs):
@@ -68,7 +69,7 @@ def main():
             #         groups.append([y])    # start new group
 
 
-        predictions_df = pd.DataFrame(answer_array, columns=['Frame', 'Confidence'])
+        predictions_df = pd.DataFrame(answer_array, columns=['Frame', 'Confidence', 'Timecode'])
         predictions_df.to_csv(f'PRED-{file}.csv', index=False)
 
         s3_upload = boto3.resource('s3')
