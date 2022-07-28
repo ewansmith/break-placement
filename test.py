@@ -29,7 +29,7 @@ for index, row in df.iterrows():
     prediction = response['Body'].read().decode('utf-8').split(',')
     answer = prediction[0]
     prob = prediction[1][:-2]
-    if answer == '1' and float(prob) > 0.8:
+    if answer == '1' and float(prob) > 0.95:
         answer_array.append([index + 2, answer, prob])
 
 
