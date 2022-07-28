@@ -156,6 +156,5 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
-    print(checkCompletion('10_0137_0008.003.csv'))
+    main()
     # getUrl(getLocation('10_0137_0015.003'))
