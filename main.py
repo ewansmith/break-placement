@@ -90,7 +90,7 @@ def checkCompletion(ID):
 
     if 'Contents' in response:
         for obj in response['Contents']:
-            if ID == obj['Key']:
+            if f'initial/{ID}' == obj['Key']:
                 return True
             
         return False
@@ -156,5 +156,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    print(checkCompletion('10_0137_0008.003.csv'))
     # getUrl(getLocation('10_0137_0015.003'))
