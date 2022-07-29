@@ -112,13 +112,14 @@ def main():
             length = calculateLength(obj)
             now = strftime("%H:%M:%S", localtime())
             print('Analysing id: ', key, 'at', now) 
+
+            if checkCompletion(full_name):
+                    print('ID already analysed, skipping.')
+                    continue
+
             location = getLocation(key)
             if location:
                 url = getUrl(location)
-
-                if checkCompletion(full_name):
-                    print('ID already analysed, skipping.')
-                    continue
 
                 with urllib.request.urlopen(url) as response, open('current.mp4', 'wb') as out_file:
                     shutil.copyfileobj(response, out_file)

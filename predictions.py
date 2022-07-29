@@ -35,11 +35,12 @@ def checkCompletion(ID):
     """
     check whether id already analysed
     """
-    prefix = f'Predictions/PRED-{ID}'
+    prefix = f'Predictions/PRED-{ID}.csv'
     response = s3.list_objects_v2(Bucket='break-data-collection', Prefix=prefix, MaxKeys=1)
 
     if 'Contents' in response:
         for obj in response['Contents']:
+            print(obj['Key'], 'and', prefix)
             if prefix == obj['Key']:
                 return True
             
@@ -53,9 +54,12 @@ def main():
 
     if 'Contents' in content_list:
         for obj in content_list['Contents']:
-            file = obj['Key'].split('/')[1][:-4]
-            if checkCompletion(file) or obj['Key'] == 'New/':
+            if obj['Key'] == 'New/':
                 continue
+            file = obj['Key'].split('/')[1][:-4]
+            if checkCompletion(file):
+               print('ID predictions already exist')
+               continue
 
             now = strftime("%H:%M:%S", localtime())
             print(now, ': Generating predictions for ' + file)
@@ -68,6 +72,8 @@ def main():
             df = pd.read_csv(s3_object['Body'])
             df.drop('breaks', axis=1, inplace=True)
             answer_array = []
+
+            print('Beginning inference')
 
             for index, row in df.iterrows():
                 if index < 7500 or index > length - 7500:
