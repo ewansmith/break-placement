@@ -16,7 +16,7 @@ def getStartAndEnd(prodId):
     """
     Get som and eom for an ID from API
     """
-    print('Getting content details of', prodId)
+    print('Getting ID timecode information')
 
     try:
         api = f'https://programmeversionapi.prd.bs.itv.com/programmeVersion/{prodId}'
@@ -93,12 +93,10 @@ def main():
             predictions_df.to_csv(f'PRED-{file}.csv', index=False)
 
             s3_upload = boto3.resource('s3')
-            s3_upload.Object('break-data-collection', f'PRED-{file}.csv').put(Body=open(f'PRED-{file}.csv', 'rb'))
+            s3_upload.Object('break-data-collection', f'Predictions/PRED-{file}.csv').put(Body=open(f'PRED-{file}.csv', 'rb'))
             print(file, 'Predictions uploaded to bucket')
 
 
 
 if __name__ == '__main__':
     main()
-## print(pd.DataFrame(answer_array))
-## 16467
