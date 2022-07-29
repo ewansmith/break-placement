@@ -2,7 +2,7 @@ import boto3
 import pandas as pd
 from utilities import calculateLength, toTimecode
 import requests
-
+from time import localtime, strftime
 
 client = boto3.client('sagemaker-runtime')
 endpoint_name = "trial-endpoint-3"
@@ -14,18 +14,19 @@ s3 = boto3.client('s3')
 
 def getStartAndEnd(prodId):
     """
-    get som and eom
+    Get som and eom for an ID from API
     """
+    print('Getting content details of', prodId)
+
     try:
-        print('Getting content details of ', prodId)
         api = f'https://programmeversionapi.prd.bs.itv.com/programmeVersion/{prodId}'
         json = requests.get(api).json()
         info = json['_embedded']['programmeVersions'][0]['partTimes'][0]
         som = info['som']
         eom = info['eom']
-    except Exception as e:
-        'Request failed'
-        raise(e)
+    except:
+        'API request failed'
+        return
 
     return { 'som': som, 'eom': eom }
 
@@ -55,8 +56,12 @@ def main():
             if checkCompletion(file) or obj['Key'] == 'New/':
                 continue
 
+            now = strftime("%H:%M:%S", localtime())
+            print(now, ': Generating predictions for' + file)
             s3_object = s3.get_object(Bucket=bucket, Key=f'New/{file}.csv')
             obj = getStartAndEnd(file)
+            if obj is None:
+                continue
             length = calculateLength(obj)
 
             df = pd.read_csv(s3_object['Body'])

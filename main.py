@@ -10,6 +10,7 @@ import requests
 import boto3
 from io import StringIO
 import json
+from time import localtime, strftime
 
 
 f = open('productions.json')
@@ -108,7 +109,8 @@ def main():
             filename = key.replace('/', '_')
             full_name = f'{filename}.csv'
             length = calculateLength(obj)
-            print('Analysing id: ', key) 
+            now = strftime("%H:%M:%S", localtime())
+            print('Analysing id: ', key, 'at', now) 
             location = getLocation(key)
             if location:
                 url = getUrl(location)
