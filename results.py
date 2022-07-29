@@ -51,6 +51,7 @@ def getBreaks(prodId):
 def main():
     content_list = s3.list_objects_v2(Bucket='break-data-collection', Prefix=f'Predictions/')
     total = 0
+    tolerance = 25
 
     for obj in content_list['Contents']:
         if obj['Key'] == 'Predictions/':
@@ -69,8 +70,8 @@ def main():
         print('Calculating score')
 
         for bp in breaks:
-            start = timecodeToFrame(bp[0]) - 10 - som
-            end = timecodeToFrame(bp[1]) + 10 - som
+            start = timecodeToFrame(bp[0]) - tolerance - som
+            end = timecodeToFrame(bp[1]) + tolerance - som
             valid = df['Frame'].between(start, end).any()
             
             if valid:
