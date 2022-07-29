@@ -57,7 +57,7 @@ def main():
                 continue
             file = obj['Key'].split('/')[1][:-4]
             if checkCompletion(file):
-               print('ID predictions already exist')
+               print(file, 'predictions already exist')
                continue
 
             now = strftime("%H:%M:%S", localtime())
@@ -90,7 +90,7 @@ def main():
                 prediction = response['Body'].read().decode('utf-8').split(',')
                 answer = prediction[0]
                 prob = prediction[1][:-2]
-                if answer == '1' and float(prob) > 0.96:
+                if answer == '1' and float(prob) > 0.95:
                     frame = index + 2
                     answer_array.append([frame, prob, toTimecode(frame)])
 
