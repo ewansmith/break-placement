@@ -9,7 +9,6 @@ endpoint_name = "trial-endpoint-3"
 content_type = "text/csv"
 accept = "text/csv"
 bucket = 'break-data-collection'
-files = ['10_0137_0015.003', '10_1779_0014.001', '2_4263_0245.001', '2_4263_0235.001', '2_4263_0247.001']
 s3 = boto3.client('s3')
 
 
@@ -31,43 +30,66 @@ def getStartAndEnd(prodId):
     return { 'som': som, 'eom': eom }
 
 
+def checkCompletion(ID):
+    """
+    check whether id already analysed
+    """
+    response = s3.list_objects_v2(Bucket='break-data-collection', Prefix=f'Predictions/{ID}', MaxKeys=1)
+
+    if 'Contents' in response:
+        for obj in response['Contents']:
+            if f'initial/{ID}' == obj['Key']:
+                return True
+            
+        return False
+    else:
+        return False
+
+
 def main():
-    for file in files:
-        s3_object = s3.get_object(Bucket=bucket, Key=f'{file}.csv')
-        obj = getStartAndEnd(file)
-        length = calculateLength(obj)
+    content_list = s3.list_objects_v2(Bucket='break-data-collection', Prefix=f'New/')
 
-        df = pd.read_csv(s3_object['Body'])
-        df.drop('breaks', axis=1, inplace=True)
-        answer_array = []
-
-        for index, row in df.iterrows():
-            if index < 7500 or index > length - 7500:
+    if 'Contents' in content_list:
+        for obj in content_list['Contents']:
+            file = obj['Key'].split('/')[1][:-4]
+            if checkCompletion(file) or obj['Key'] == 'New/':
                 continue
-            if index == length / 2:
-                print('Halfway there!')
-            payload = ','.join(map(str, row.values))
 
-            response = client.invoke_endpoint(
-                EndpointName=endpoint_name,
-                ContentType=content_type,
-                Accept=accept,
-                Body=payload
-            )
-            prediction = response['Body'].read().decode('utf-8').split(',')
-            answer = prediction[0]
-            prob = prediction[1][:-2]
-            if answer == '1' and float(prob) > 0.95:
-                frame = index + 2
-                answer_array.append([frame, prob, toTimecode(frame)])
+            s3_object = s3.get_object(Bucket=bucket, Key=f'New/{file}.csv')
+            obj = getStartAndEnd(file)
+            length = calculateLength(obj)
+
+            df = pd.read_csv(s3_object['Body'])
+            df.drop('breaks', axis=1, inplace=True)
+            answer_array = []
+
+            for index, row in df.iterrows():
+                if index < 7500 or index > length - 7500:
+                    continue
+                if index == length / 2:
+                    print('Halfway there!')
+                payload = ','.join(map(str, row.values))
+
+                response = client.invoke_endpoint(
+                    EndpointName=endpoint_name,
+                    ContentType=content_type,
+                    Accept=accept,
+                    Body=payload
+                )
+                prediction = response['Body'].read().decode('utf-8').split(',')
+                answer = prediction[0]
+                prob = prediction[1][:-2]
+                if answer == '1' and float(prob) > 0.96:
+                    frame = index + 2
+                    answer_array.append([frame, prob, toTimecode(frame)])
 
 
-        predictions_df = pd.DataFrame(answer_array, columns=['Frame', 'Confidence', 'Timecode'])
-        predictions_df.to_csv(f'PRED-{file}.csv', index=False)
+            predictions_df = pd.DataFrame(answer_array, columns=['Frame', 'Confidence', 'Timecode'])
+            predictions_df.to_csv(f'PRED-{file}.csv', index=False)
 
-        s3_upload = boto3.resource('s3')
-        s3_upload.Object('break-data-collection', f'PRED-{file}.csv').put(Body=open(f'PRED-{file}.csv', 'rb'))
-        print(file, 'Predictions uploaded to bucket')
+            s3_upload = boto3.resource('s3')
+            s3_upload.Object('break-data-collection', f'PRED-{file}.csv').put(Body=open(f'PRED-{file}.csv', 'rb'))
+            print(file, 'Predictions uploaded to bucket')
 
 
 
