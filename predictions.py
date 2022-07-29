@@ -35,7 +35,7 @@ def checkCompletion(ID):
     """
     check whether id already analysed
     """
-    response = s3.list_objects_v2(Bucket='break-data-collection', Prefix=f'Predictions/{ID}', MaxKeys=1)
+    response = s3.list_objects_v2(Bucket='break-data-collection', Prefix=f'Predictions/PRED-{ID}', MaxKeys=1)
 
     if 'Contents' in response:
         for obj in response['Contents']:
