@@ -57,7 +57,7 @@ def main():
                 continue
 
             now = strftime("%H:%M:%S", localtime())
-            print(now, ': Generating predictions for' + file)
+            print(now, ': Generating predictions for ' + file)
             s3_object = s3.get_object(Bucket=bucket, Key=f'New/{file}.csv')
             obj = getStartAndEnd(file)
             if obj is None:
