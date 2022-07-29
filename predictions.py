@@ -40,7 +40,6 @@ def checkCompletion(ID):
 
     if 'Contents' in response:
         for obj in response['Contents']:
-            print(obj['Key'], 'and', prefix)
             if prefix == obj['Key']:
                 return True
             
