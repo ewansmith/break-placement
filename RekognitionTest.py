@@ -8,9 +8,6 @@ session = boto3.Session(profile_name='default', region_name='eu-west-1')
 
 class VideoDetect:
     jobId = ''
-    # rek = boto3.client('rekognition')
-    # sqs = boto3.client('sqs')
-    # sns = boto3.client('sns')
     rek = session.client('rekognition')
     sqs = session.client('sqs')
     sns = session.client('sns')
@@ -152,17 +149,17 @@ class VideoDetect:
                 "RoleArn": self.roleArn,
                 "SNSTopicArn": self.snsTopicArn,
             },
-            SegmentTypes=["TECHNICAL_CUE"],#, "SHOT"],
-            # Filters={
-            #     "TechnicalCueFilter": {
-            #         "BlackFrame": {
-            #             # "MaxPixelThreshold": max_pixel_threshold,
-            #             "MinCoveragePercentage": min_coverage_percentage,
-            #         },
-            #         "MinSegmentConfidence": min_Technical_Cue_Confidence,
-            #     },
-                # "ShotFilter": {"MinSegmentConfidence": min_Shot_Confidence},
-            # }
+            SegmentTypes=["TECHNICAL_CUE", "SHOT"],
+            Filters={
+                "TechnicalCueFilter": {
+                    "BlackFrame": {
+                        # "MaxPixelThreshold": max_pixel_threshold,
+                        "MinCoveragePercentage": min_coverage_percentage,
+                    },
+                    "MinSegmentConfidence": min_Technical_Cue_Confidence,
+                },
+                "ShotFilter": {"MinSegmentConfidence": min_Shot_Confidence},
+            }
         )
 
         self.startJobId = response["JobId"]
@@ -186,24 +183,8 @@ class VideoDetect:
                 print("\nRequested Types\n---------------")
                 for selectedSegmentType in response['SelectedSegmentTypes']:
                     print(f"\tType: {selectedSegmentType['Type']}")
-                    # print(f"\t\tModel Version: {selectedSegmentType['ModelVersion']}")
 
                 print()
-                # print("\nAudio metadata\n--------------")
-                # for audioMetadata in response['AudioMetadata']:
-                #     print(f"\tCodec: {audioMetadata['Codec']}")
-                #     print(f"\tDuration: {audioMetadata['DurationMillis']}")
-                #     print(f"\tNumber of Channels: {audioMetadata['NumberOfChannels']}")
-                #     print(f"\tSample rate: {audioMetadata['SampleRate']}")
-                # print()
-                # print("\nVideo metadata\n--------------")
-                # for videoMetadata in response["VideoMetadata"]:
-                #     print(f"\tCodec: {videoMetadata['Codec']}")
-                #     print(f"\tColor Range: {videoMetadata['ColorRange']}")
-                #     print(f"\tDuration: {videoMetadata['DurationMillis']}")
-                #     print(f"\tFormat: {videoMetadata['Format']}")
-                #     print(f"\tFrame rate: {videoMetadata['FrameRate']}")
-                #     print("\nSegments\n--------")
 
                 firstTime = False
 
@@ -218,19 +199,10 @@ class VideoDetect:
                     print("Shot")
                     print(f"\tConfidence: {segment['ShotSegment']['Confidence']}")
                     print(f"\tIndex: " + str(segment["ShotSegment"]["Index"]))
-
-                # print(f"\tDuration (milliseconds): {segment['DurationMillis']}")
-                # print(f"\tStart Timestamp (milliseconds): {segment['StartTimestampMillis']}")
-                # print(f"\tEnd Timestamp (milliseconds): {segment['EndTimestampMillis']}")
                 
                 print(f"\tStart timecode: {segment['StartTimecodeSMPTE']}")
                 print(f"\tEnd timecode: {segment['EndTimecodeSMPTE']}")
-                # print(f"\tDuration timecode: {segment['DurationSMPTE']}")
-
-                # print(f"\tStart frame number {segment['StartFrameNumber']}")
-                # print(f"\tEnd frame number: {segment['EndFrameNumber']}")
                 segmentEnds.append(segment['EndFrameNumber'])
-                # print(f"\tDuration frames: {segment['DurationFrames']}")
 
                 print()
 
