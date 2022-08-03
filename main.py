@@ -10,6 +10,7 @@ import requests
 import boto3
 from io import StringIO
 import json
+from time import localtime, strftime
 
 
 f = open('productions.json')
@@ -86,11 +87,12 @@ def checkCompletion(ID):
     check whether id already analysed
     """
     s3 = session.client('s3')
-    response = s3.list_objects_v2(Bucket='break-data-collection', Prefix=ID, MaxKeys=1)
+    prefix = f'initial/{ID}'
+    response = s3.list_objects_v2(Bucket='break-data-collection', Prefix=prefix, MaxKeys=1)
 
     if 'Contents' in response:
         for obj in response['Contents']:
-            if ID == obj['Key']:
+            if prefix == obj['Key']:
                 return True
             
         return False
@@ -98,47 +100,26 @@ def checkCompletion(ID):
         return False
 
 
-
-# test_object = {
-#     'ID': '2_4259_0359.001',
-#     "soe": "09:59:30:00",
-#     "eoe": "10:20:50:01",
-#     "som": "10:00:00:00",
-#     "eom": "10:20:40:00",
-#      "optionalBreakpoints": [
-#                 [
-#                     "10:19:45:08",
-#                     "10:19:45:12"
-#                 ],
-#             ],
-#             "preferredBreakpoints": [
-#                 [
-#                     "10:14:30:02",
-#                     "10:14:30:03"
-#                 ],
-#             ],
-# }
-
-
 def main():
 
     try:
         for obj in input_data:
-            # obj = test_object
             key = obj['ID']
             if key[-3:] == '002':
                 continue
             filename = key.replace('/', '_')
             full_name = f'{filename}.csv'
             length = calculateLength(obj)
-            print('Analysing id: ', key) 
+            now = strftime("%H:%M:%S", localtime())
+            print('Analysing id: ', key, 'at', now) 
+
+            if checkCompletion(full_name):
+                    print('ID already analysed, skipping.')
+                    continue
+
             location = getLocation(key)
             if location:
                 url = getUrl(location)
-
-                if checkCompletion(full_name):
-                    print('ID already analysed, skipping.')
-                    continue
 
                 with urllib.request.urlopen(url) as response, open('current.mp4', 'wb') as out_file:
                     shutil.copyfileobj(response, out_file)
@@ -169,7 +150,7 @@ def main():
                 csv_buffer = StringIO()
                 df.to_csv(csv_buffer, index=False)
                 s3_upload = session.resource('s3')
-                s3_upload.Object('break-data-collection', full_name).put(Body=csv_buffer.getvalue())
+                s3_upload.Object('break-data-collection', f'New/{full_name}').put(Body=csv_buffer.getvalue())
                 print(key, 'metadata uploaded to bucket')
             except:
                 print('Failed to upload to s3 bucket')

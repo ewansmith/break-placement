@@ -1,7 +1,6 @@
 import ffmpeg
 import tempfile
 import re
-import numpy as np
 from utilities import timecodeToFrame
 
 

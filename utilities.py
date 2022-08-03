@@ -60,3 +60,18 @@ def calculateLength(obj):
     end = timecodeToFrame(obj['eom'])
 
     return end - start
+
+
+def toTimecode(frames):
+    """
+    Converts number of frames to timecode (assuming 10:00:00 start)
+    """
+    hour = 3600 * 25
+    minute = 60 * 25
+    second = 25
+    hours = frames // hour
+    minutes = (frames - (hours * hour)) // minute
+    seconds = (frames - (hours * hour) - (minutes * minute)) // second
+    remainder = frames - (hours * hour) - (minutes * minute) - (seconds * second)
+
+    return f'0{hours}:{minutes}:{seconds}:{remainder}'
