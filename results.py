@@ -38,8 +38,10 @@ def getBreaks(prodId):
             if bp_som is None or bp_eom is None:
                 return []
 
-            if type_x == "Optional Break Point (Soft Part)" or type_x == "Preferred Break Point (Soft Part)":
+            if type_x == "Preferred Break Point (Soft Part)":
                 breaks.append([bp_som, bp_eom])
+            # if type_x == "Optional Break Point (Soft Part)" or type_x == "Preferred Break Point (Soft Part)":
+            #     breaks.append([bp_som, bp_eom])
 
         return [breaks, som]
 
@@ -61,6 +63,7 @@ def main():
         print('Getting predictions for', file)
         s3_object = s3.get_object(Bucket=bucket, Key=f'Predictions/{file}.csv')
         df = pd.read_csv(s3_object['Body'])
+        df2 = df.loc[df['Confidence'] > 0.85]
 
         breakInfo = getBreaks(file[5:])
         breaks = breakInfo[0]
@@ -72,7 +75,7 @@ def main():
         for bp in breaks:
             start = timecodeToFrame(bp[0]) - tolerance - som
             end = timecodeToFrame(bp[1]) + tolerance - som
-            valid = df['Frame'].between(start, end).any()
+            valid = df2['Frame'].between(start, end).any()
             
             if valid:
                 correct += 1
