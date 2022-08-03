@@ -161,4 +161,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    # getUrl(getLocation('10_0137_0015.003'))

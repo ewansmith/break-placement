@@ -9,6 +9,38 @@ def convertProdID(id):
 
     return new
 
+def roundPartial(x, base=0.02):
+    '''
+    Return x rounded to 5
+    '''
+    return base * round(x / base)
+
+def getMidpoint(start, end):
+    '''
+    Return the integer exactly halfway between start and end
+    '''
+    return (start + end) / 2
+
+def timecodeToFrames(timecode):
+    '''
+    Return timecode in number of frames
+    '''
+    temp = timecode.split(':')
+    answer = [int(x) for x in temp]
+
+    hours = (answer[0]-10) * (3600 * 25)
+    mins = answer[1] * 60 * 25
+    secs = (answer[2] * 25)
+    return hours + mins + secs + answer[3]
+
+def count_elements(seq):
+    """
+    Tally elements from `seq' and return dictionary
+    """
+    dict = {}
+    for i in seq:
+        dict[i] = dict.get(i, 0) + 1
+    return dict
 
 def timecodeToFrame(time):
     """
@@ -19,7 +51,6 @@ def timecodeToFrame(time):
     frameCount = (ints[0] * 3600 * 25) + (ints [1] * 60 * 25) + (ints[2] * 25) + ints[3]
 
     return frameCount
-
 
 def calculateLength(obj):
     """
@@ -44,6 +75,3 @@ def toTimecode(frames):
     remainder = frames - (hours * hour) - (minutes * minute) - (seconds * second)
 
     return f'0{hours}:{minutes}:{seconds}:{remainder}'
-
-
-# print(toTimecode(49702))

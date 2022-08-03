@@ -22,8 +22,7 @@ breakLookup = [
     184625, # below 123.05 minutes -> 9
     205625, # below 137.05 minutes -> 10
 ]
-breakLookup.sort() # ensure sorted for bisect 
-
+breakLookup.sort() # ensure sorted for bisect
 
 def breakPattern(length):
     """
@@ -50,7 +49,7 @@ def breakPattern(length):
 
     return score
 
-        
+
 # Plot distibution to visualise
 # x=np.linspace(0, 60000, 60000)
 # plt.plot(x, breakPattern(60000))
